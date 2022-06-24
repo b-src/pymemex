@@ -44,5 +44,14 @@ markdown_syntax_dict = {
     "######": "h6",
 }
 
+markdown_token_to_html_dict = {
+    "h1": ("<h1>", "</h1>"),
+    "h2": ("<h2>", "</h2>"),
+    "h3": ("<h3>", "</h3>"),
+    "h4": ("<h4>", "</h4>"),
+    "h5": ("<h5>", "</h5>"),
+    "h6": ("<h6>", "</h6>"),
+}
+
 markdown_syntax_trie = _build_trie(markdown_syntax_dict) 
 

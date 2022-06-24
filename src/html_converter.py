@@ -1,40 +1,26 @@
+from collections import deque
 from enum import Enum, auto
 from typing import TextIO
 
-from markdown_syntax import markdown_syntax_dict, markdown_syntax_trie, trie_lookup, TrieState, END_TOKEN
+from markdown_syntax import markdown_syntax_dict, markdown_token_to_html_dict, markdown_syntax_trie, trie_lookup, TrieState, END_TOKEN
 from memex_logging import memex_logger
 
-
-class ElementTreeNode:
-    def __init__(self, token, content, parent=None) -> None:
-        self.token = token
-        self.content = content
-        self.children = []
-        self.parent = parent
-        
-    def __str__(self):
-        string = f"ElementTreeNode with token {self.token} and content {self.content}\n\n"
-        for child in self.children:
-            string += f"Has child: {child}"
- 
-        return string
-    
 
 class MarkdownToHTMLConverter:
     def __init__(self) -> None:
         self.markdown_tokenizer = MarkdownTokenizer()
+        self.token_to_html_converter = TokenToHTMLConverter()
 
     def convert_file_to_html(self, input_file_path: str, output_file_path: str):
         memex_logger.info(f"Converting input file {input_file_path} to HTML at {output_file_path}")
         with open(input_file_path, mode="r") as markdown_file:
-            output_file_element_tree_root = self.markdown_tokenizer.tokenize_markdown(markdown_file)
-            output_file_contents = str(output_file_element_tree_root)
+            output_file_token_list = self.markdown_tokenizer.tokenize_markdown(markdown_file)
+            output_file_contents = self.token_to_html_converter.convert_token_list_to_html(output_file_token_list)
 
             with open(output_file_path, mode="x") as output_file:
                 output_file.write(output_file_contents)
-                output_file.write("\n\nfile has been processed.")
-                
-                
+
+
 class TokenizerState(Enum):
     PARSING_SYMBOL = auto()
     CONTENT = auto()
@@ -52,7 +38,7 @@ class MarkdownTokenizer:
         self._last_token_buffer_state = TrieState.NOT_FOUND
         self._previous_token_candidate_buffer = ""
 
-    def tokenize_markdown(self, input_file: TextIO) -> ElementTreeNode:
+    def tokenize_markdown(self, input_file: TextIO) -> list[str]:
         self._reset_state_variables()
         self._state = TokenizerState.CONTENT
         
@@ -110,3 +96,25 @@ class MarkdownTokenizer:
             token_list.append(any_remaining_content)
                             
         return token_list
+
+
+class TokenToHTMLConverter:
+    def __init__(self):
+        pass
+
+    def convert_token_list_to_html(self, token_list: list[str]) -> str:
+        page_content = ""
+        closing_tag_stack = deque()
+        for token in token_list:
+            if token in markdown_syntax_dict:
+                markdown_symbol = markdown_syntax_dict[token]
+                token_open_tag, token_closing_tag = markdown_token_to_html_dict[markdown_symbol]
+                page_content += token_open_tag
+                closing_tag_stack.append(token_closing_tag)
+            else:
+                page_content += token
+                while len(closing_tag_stack) > 0:
+                    closing_tag = closing_tag_stack.pop()
+                    page_content += closing_tag
+                    
+        return page_content
