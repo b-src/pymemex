@@ -33,7 +33,36 @@ def _build_trie(symbols: dict[str,str]) -> dict[dict]:
         current_dict[END_TOKEN] = END_TOKEN
 
     return root
+
+
+class MarkdownSymbol:
+    def __init__(symbol_name: str, markdown_syntax: "str", opening_tag: str, closing_tag: str) -> None:
+        self.symbol_name = symbol_name
+        self.markdown_syntax = markdown_syntax
+        self.opening_tag = opening_tag
+        self.closing_tag = closing_tag
+        
+
+class MarkdownSymbolTable:
+    def __init__(markdown_symbol_list: list[MarkdownSymbol]) -> None:
+        self._symbols = markdown_symbol_list
+        self._syntax_dict = self._build_syntax_dict()
+        self._symbol_name_dict = self._build_symbol_name_dict()
+        
+    def _build_syntax_dict() -> dict[str, str]:
+        syntax_dict = {}
+        for symbol in self._symbols:
+            syntax_dict[symbol.markdown_syntax] = symbol
             
+        return syntax_dict
+        
+    def _build_symbol_name_dict() -> dict[str, str]:
+        symbol_name_dict = {}
+        for symbol in self._symbols:
+            syntax_dict[symbol.symbol_name] = symbol
+            
+        return symbol_name_dict
+    
 
 markdown_syntax_dict = {
     "#": "h1",
