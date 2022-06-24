@@ -1,4 +1,26 @@
+from enum import Enum, auto
+
+
 END_TOKEN = "END_TOKEN"
+
+class TrieState(Enum):
+    EXISTS_PARTIAL = auto()
+    EXISTS_COMPLETE = auto()
+    NOT_FOUND = auto()
+    
+
+def trie_lookup(value: str, trie: dict[dict]) -> TrieState:
+    current_dict = trie
+    for char in value:
+        if char in current_dict:
+            current_dict = current_dict[char]
+        else:
+            return TrieState.NOT_FOUND
+        
+    if END_TOKEN in current_dict:
+        return TrieState.EXISTS_COMPLETE
+    else:
+        return TrieState.EXISTS_PARTIAL
 
 
 def _build_trie(symbols: dict[str,str]) -> dict[dict]:
@@ -8,7 +30,7 @@ def _build_trie(symbols: dict[str,str]) -> dict[dict]:
         for char in symbol:
             current_dict = current_dict.setdefault(char, {})
         
-        current_dict["_end"] = END_TOKEN
+        current_dict[END_TOKEN] = END_TOKEN
 
     return root
             
@@ -24,4 +46,3 @@ markdown_syntax_dict = {
 
 markdown_syntax_trie = _build_trie(markdown_syntax_dict) 
 
-print(markdown_syntax_trie)
