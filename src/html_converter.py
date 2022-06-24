@@ -43,12 +43,17 @@ class TokenizerState(Enum):
 
 class MarkdownTokenizer:
     def __init__(self) -> None:
-        self.token_buffer = ""
-        last_token_buffer_state = TrieState.NOT_FOUND
-        previous_token_candidate_buffer = ""
-        pass
+        self._token_buffer = ""
+        self._last_token_buffer_state = TrieState.NOT_FOUND
+        self._previous_token_candidate_buffer = ""
+        
+    def _reset_state_variables(self):
+        self._token_buffer = ""
+        self._last_token_buffer_state = TrieState.NOT_FOUND
+        self._previous_token_candidate_buffer = ""
 
     def tokenize_markdown(self, input_file: TextIO) -> ElementTreeNode:
+        self._reset_state_variables()
         self._state = TokenizerState.CONTENT
         
         token_list = []
@@ -64,45 +69,44 @@ class MarkdownTokenizer:
                         symbol_status = trie_lookup(char, markdown_syntax_trie)
                         if symbol_status != TrieState.NOT_FOUND:
                             self._state = TokenizerState.PARSING_SYMBOL
-                            self.previous_token_candiate_buffer = self.token_buffer
-                            self.token_buffer = char
-                            self.last_token_buffer_state = symbol_status
+                            self._previous_token_candiate_buffer = self._token_buffer
+                            self._token_buffer = char
+                            self._last_token_buffer_state = symbol_status
                         else:
-                            self.token_buffer += char
+                            self._token_buffer += char
 
                     case TokenizerState.PARSING_SYMBOL:
-                        current_symbol = self.token_buffer + char
+                        current_symbol = self._token_buffer + char
                         current_symbol_state = trie_lookup(current_symbol, markdown_syntax_trie)
                         char_symbol_state = trie_lookup(char, markdown_syntax_trie)
                         
                         if current_symbol_state == TrieState.NOT_FOUND:
-                            if self.last_token_buffer_state == TrieState.EXISTS_PARTIAL:
+                            if self._last_token_buffer_state == TrieState.EXISTS_PARTIAL:
                                 if char_symbol_state == TrieState.NOT_FOUND:
-                                    self.token_buffer = self.previous_token_candiate_buffer + current_symbol
-                                    self.previous_token_candiate_buffer = ""
+                                    self._token_buffer = self._previous_token_candiate_buffer + current_symbol
+                                    self._previous_token_candiate_buffer = ""
                                     self._state = TokenizerState.CONTENT
                                 else:
-                                    self.previous_token_candiate_buffer = self.previous_token_candiate_buffer + self.token_buffer
-                                    self.token_buffer = char
+                                    self._previous_token_candiate_buffer = self._previous_token_candiate_buffer + self._token_buffer
+                                    self._token_buffer = char
                                     # State is already set to PARSING_SYMBOL
 
-                            elif self.last_token_buffer_state == TrieState.EXISTS_COMPLETE:
-                                if self.previous_token_candiate_buffer:
-                                    token_list.append(self.previous_token_candiate_buffer)
-                                    self.previous_token_candiate_buffer = ""
-                                token_list.append(self.token_buffer)
-                                self.token_buffer = char
+                            elif self._last_token_buffer_state == TrieState.EXISTS_COMPLETE:
+                                if self._previous_token_candiate_buffer:
+                                    token_list.append(self._previous_token_candiate_buffer)
+                                    self._previous_token_candiate_buffer = ""
+                                token_list.append(self._token_buffer)
+                                self._token_buffer = char
                                 if char_symbol_state == TrieState.NOT_FOUND:
                                     self._state = TokenizerState.CONTENT
                                 else:
                                     self._state = TokenizerState.PARSING_SYMBOL
                         else:
-                            self.token_buffer += char
+                            self._token_buffer += char
 
         # Add anything remaining to token list when EOF is hit
-        any_remaining_content = self.previous_token_candiate_buffer + self.token_buffer
+        any_remaining_content = self._previous_token_candiate_buffer + self._token_buffer
         if any_remaining_content:
             token_list.append(any_remaining_content)
-
                             
         return token_list
