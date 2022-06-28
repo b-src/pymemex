@@ -12,13 +12,16 @@ class TrieState(Enum):
 
 
 class MarkdownSymbol:
-    def __init__(symbol_name: str, markdown_syntax: "str", opening_tag: Optional[str], closing_tag: Optional[str], has_closing_symbol: bool) -> None:
+    def __init__(self, symbol_name: str, markdown_syntax: "str", opening_tag: Optional[str], closing_tag: Optional[str], closing_symbol_name: Optional[str]) -> None:
         self.symbol_name = symbol_name
         self.markdown_syntax = markdown_syntax
         self.opening_tag = opening_tag
         self.closing_tag = closing_tag
-        self.has_closing_symbol = has_closing_symbol
-        
+        self.closing_symbol_name = closing_symbol_name
+    
+    def has_closing_symbol(self) -> bool:
+        return self.closing_symbol_name is not None
+
 
 class MarkdownSymbolHelper:
     def __init__(markdown_symbol_list: list[MarkdownSymbol]) -> None:
@@ -67,35 +70,35 @@ class MarkdownSymbolHelper:
 
 
 _markdown_symbols = [
-    MarkdownSymbol("h1", "#", "<h1>", "</h1>", False),
-    MarkdownSymbol("h2", "##", "<h2>", "</h2>", False),
-    MarkdownSymbol("h3", "###", "<h3>", "</h3>", False),
-    MarkdownSymbol("h4", "####", "<h4>", "</h4>", False),
-    MarkdownSymbol("h5", "#####", "<h5>", "</h5>", False),
-    MarkdownSymbol("h6", "#######", "<h6>", "</h6>", False),
-    MarkdownSymbol("paragraph-separator", "\n\n", None, None, False),
-    MarkdownSymbol("linebreak", "\\\\\\", "<br />", None, False),
-    MarkdownSymbol("bold", "*", "<b>", "</b>", True),
-    MarkdownSymbol("italic", "**", "<i>", "</i>", True),
-    MarkdownSymbol("bold-italic", "***", "<b><i>", "</i></b>", True),
-    MarkdownSymbol("internal-link-start", "{", "<a>", None, False),
-    MarkdownSymbol("internal-link-end", "}", None, "</a>", False),
-    MarkdownSymbol("external-link-start", "[", "<a>", None, False),
-    MarkdownSymbol("external-link-end", "]", None, "</a>", False),
-    MarkdownSymbol("quote", '""', None, None, True),
-    MarkdownSymbol("citation-start" "{{", None, None, False),
-    MarkdownSymbol("citation-end" "}}", None, None, False),
-    MarkdownSymbol("figure-start", "[[", None, None, False),
-    MarkdownSymbol("figure-end", "]]", None, None, False),
-    MarkdownSymbol("inline-code", "`", None, None, True),
-    MarkdownSymbol("multiline-code", "```", None, None, True),
-    MarkdownSymbol("backslash", "\\\\", "\\", None, False),
-    MarkdownSymbol("octothorpe", "\\#", "#", None, False),
-    MarkdownSymbol("asterisk", "\\*", "*", None, False),
-    MarkdownSymbol("open-curly-brace", "\\{", "{", None, False),
-    MarkdownSymbol("close-curly-brace", "\\}", "}", None, False),
-    MarkdownSymbol("open-square-bracket" "\\[", "[", None, False),
-    MarkdownSymbol("close-square-bracket", "\\]", "]", None, False),
+    MarkdownSymbol(symbol_name="h1", markdown_syntax="#", opening_tag="<h1>", closing_tag="</h1>", closing_symbol_name=None),
+    MarkdownSymbol(symbol_name="h2", markdown_syntax="##", opening_tag="<h2>", closing_tag="</h2>", closing_symbol_name=None),
+    MarkdownSymbol(symbol_name="h3", markdown_syntax="###", opening_tag="<h3>", closing_tag="</h3>", closing_symbol_name=None),
+    MarkdownSymbol(symbol_name="h4", markdown_syntax="####", opening_tag="<h4>", closing_tag="</h4>", closing_symbol_name=None),
+    MarkdownSymbol(symbol_name="h5", markdown_syntax="#####", opening_tag="<h5>", closing_tag="</h5>", closing_symbol_name=None),
+    MarkdownSymbol(symbol_name="h6", markdown_syntax="#######", opening_tag="<h6>", closing_tag="</h6>", closing_symbol_name=None),
+    MarkdownSymbol(symbol_name="paragraph-separator", markdown_syntax="\n\n", opening_tag=None, closing_tag=None, closing_symbol_name=None),
+    MarkdownSymbol(symbol_name="linebreak", markdown_syntax="\\\\\\", opening_tag="<br />", closing_tag=None, closing_symbol_name=None),
+    MarkdownSymbol(symbol_name="bold", markdown_syntax="*", opening_tag="<b>", closing_tag="</b>", closing_symbol_name="bold"),
+    MarkdownSymbol(symbol_name="italic", markdown_syntax="**", opening_tag="<i>", closing_tag="</i>", closing_symbol_name="italic"),
+    MarkdownSymbol(symbol_name="bold-italic", markdown_syntax="***", opening_tag="<b><i>", closing_tag="</i></b>", closing_symbol_name="bold-italic"),
+    MarkdownSymbol(symbol_name="internal-link-start", markdown_syntax="{", opening_tag="<a>", closing_tag=None, closing_symbol_name="internal-link-end"),
+    MarkdownSymbol(symbol_name="internal-link-end", markdown_syntax="}", opening_tag=None, closing_tag="</a>", closing_symbol_name=None),
+    MarkdownSymbol(symbol_name="external-link-start", markdown_syntax="[", opening_tag="<a>", closing_tag=None, closing_symbol_name="external-link-end"),
+    MarkdownSymbol(symbol_name="external-link-end", markdown_syntax="]", opening_tag=None, closing_tag="</a>", closing_symbol_name=None),
+    MarkdownSymbol(symbol_name="quote", markdown_syntax='""', opening_tag=None, closing_tag=None, closing_symbol_name="quote"),
+    MarkdownSymbol(symbol_name="citation-start", markdown_syntax="{{", opening_tag=None, closing_tag=None, closing_symbol_name="citation-end"),
+    MarkdownSymbol(symbol_name="citation-end", markdown_syntax="}}", opening_tag=None, closing_tag=None, closing_symbol_name=None),
+    MarkdownSymbol(symbol_name="figure-start", markdown_syntax="[[", opening_tag=None, closing_tag=None, closing_symbol_name="figure-end"),
+    MarkdownSymbol(symbol_name="figure-end", markdown_syntax="]]", opening_tag=None, closing_tag=None, closing_symbol_name=None),
+    MarkdownSymbol(symbol_name="inline-code", markdown_syntax="`", opening_tag=None, closing_tag=None, closing_symbol_name="inline-code"),
+    MarkdownSymbol(symbol_name="multiline-code", markdown_syntax="```", opening_tag=None, closing_tag=None, closing_symbol_name="multiline-code"),
+    MarkdownSymbol(symbol_name="backslash", markdown_syntax="\\\\", opening_tag="\\", closing_tag=None, closing_symbol_name=None),
+    MarkdownSymbol(symbol_name="octothorpe", markdown_syntax="\\#", opening_tag="#", closing_tag=None, closing_symbol_name=None),
+    MarkdownSymbol(symbol_name="asterisk", markdown_syntax="\\*", opening_tag="*", closing_tag=None, closing_symbol_name=None),
+    MarkdownSymbol(symbol_name="open-curly-brace", markdown_syntax="\\{", opening_tag="{", closing_tag=None, closing_symbol_name=None),
+    MarkdownSymbol(symbol_name="close-curly-brace", markdown_syntax="\\}", opening_tag="}", closing_tag=None, closing_symbol_name=None),
+    MarkdownSymbol(symbol_name="open-square-bracket", markdown_syntax="\\[", opening_tag="[", closing_tag=None, closing_symbol_name=None),
+    MarkdownSymbol(symbol_name="close-square-bracket", markdown_syntax="\\]", opening_tag="]", closing_tag=None, closing_symbol_name=None),
 ]
 
 markdown_symbol_helper = MarkdownSymbolHelper(_markdown_symbols)
