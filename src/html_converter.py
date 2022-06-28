@@ -2,7 +2,7 @@ from collections import deque
 from enum import Enum, auto
 from typing import TextIO
 
-from markdown_syntax import markdown_syntax_dict, markdown_token_to_html_dict, markdown_syntax_trie, trie_lookup, TrieState, END_TOKEN
+from markdown_syntax import markdown_symbol_helper, TrieState, END_TOKEN
 from memex_logging import memex_logger
 
 
@@ -52,7 +52,7 @@ class MarkdownTokenizer:
             else:
                 match self._state:
                     case TokenizerState.CONTENT:
-                        symbol_status = trie_lookup(char, markdown_syntax_trie)
+                        symbol_status = markdown_symbol_helper.symbol_trie_lookup(char, markdown_syntax_trie)
                         if symbol_status != TrieState.NOT_FOUND:
                             self._state = TokenizerState.PARSING_SYMBOL
                             self._previous_token_candiate_buffer = self._token_buffer
@@ -63,8 +63,8 @@ class MarkdownTokenizer:
 
                     case TokenizerState.PARSING_SYMBOL:
                         current_symbol = self._token_buffer + char
-                        current_symbol_state = trie_lookup(current_symbol, markdown_syntax_trie)
-                        char_symbol_state = trie_lookup(char, markdown_syntax_trie)
+                        current_symbol_state = markdown_symbol_helper.symbol_trie_lookup(current_symbol, markdown_syntax_trie)
+                        char_symbol_state = markdown_symbol_helper.symbol_trie_lookup(char, markdown_syntax_trie)
                         
                         if current_symbol_state == TrieState.NOT_FOUND:
                             if self._last_token_buffer_state == TrieState.EXISTS_PARTIAL:
@@ -101,20 +101,56 @@ class MarkdownTokenizer:
 class TokenToHTMLConverter:
     def __init__(self):
         pass
+    
+    def _check_syntax_is_proper(self, token_list: list[str]) -> bool:
+        return _check_symbols_that_need_to_be_are_closed_properly(token_list)
 
-    def convert_token_list_to_html(self, token_list: list[str]) -> str:
-        page_content = ""
-        closing_tag_stack = deque()
+    def _check_symbols_that_need_to_be_are_closed_properly(self, token_list: list[str]) -> None:
+        expected_closing_symbols = deque()
         for token in token_list:
-            if token in markdown_syntax_dict:
-                markdown_symbol = markdown_syntax_dict[token]
-                token_open_tag, token_closing_tag = markdown_token_to_html_dict[markdown_symbol]
-                page_content += token_open_tag
-                closing_tag_stack.append(token_closing_tag)
-            else:
-                page_content += token
-                while len(closing_tag_stack) > 0:
-                    closing_tag = closing_tag_stack.pop()
-                    page_content += closing_tag
-                    
+            if markdown_symbol_helper.symbol_exists(token):
+                symbol = markdown_symbol_helper.get_symbol(token)
+
+                if expected_closing_symbols:
+                    if symbol.name == expected_closing_symbols[-1]:
+                        expected_closing_symbols.pop()
+                    else:
+                        if symbol.has_closing_symbol():
+                            expected_closing_symbols.append(symbol.closing_symbol_name)
+                else:
+                    if symbol.has_closing_symbol():
+                        expected_closing_symbols.append(symbol.closing_symbol_name)
+                        
+        if expected_closing_symbols:
+            raise Exception("Unclosed or improperly nested symbols")
+
+    # TODO: account for multiple tags closed at once
+    # TODO: account for paragraphs
+    def convert_token_list_to_html(self, token_list: list[str]) -> str:
+        self._check_syntax_is_proper(token_list)
+
+        page_content = ""
+        expected_closing_symbols = deque()
+        closing_tag_stack = deque()
+        paragraph_needed_for_next_content = False
+
+        for token in token_list:
+            if markdown_symbol_helper.symbol_exists(token):
+                symbol = markdown_symbol_helper.get_symbol(token)
+
+                if expected_closing_symbols:
+                    if symbol.name == expected_closing_symbols[-1]:
+                        expected_closing_symbols.pop()
+                        page_content += closing_tag_stack.pop()
+                    else:
+                        if symbol.has_closing_symbol():
+                            expected_closing_symbols.append(symbol.closing_symbol_name)
+                            if markdown_symbol.closing_tag is not None:
+                                closing_tag_stack.append(markdown_symbol.closing_tag)
+                else:
+                    if markdown_symbol.opening_tag is not None:
+                        page_content += token_open_tag
+                    if symbol.has_closing_symbol():
+                        expected_closing_symbols.append(symbol.closing_symbol_name)
+        
         return page_content

@@ -13,7 +13,7 @@ class TrieState(Enum):
 
 class MarkdownSymbol:
     def __init__(self, symbol_name: str, markdown_syntax: "str", opening_tag: Optional[str], closing_tag: Optional[str], closing_symbol_name: Optional[str]) -> None:
-        self.symbol_name = symbol_name
+        self.name = symbol_name
         self.markdown_syntax = markdown_syntax
         self.opening_tag = opening_tag
         self.closing_tag = closing_tag
@@ -30,21 +30,21 @@ class MarkdownSymbolHelper:
         self._symbol_name_dict = self._build_symbol_name_dict()
         self._syntax_trie = self._build_syntax_trie()
         
-    def _build_syntax_dict() -> dict[str, str]:
+    def _build_syntax_dict(self) -> dict[str, str]:
         syntax_dict = {}
         for symbol in self._symbols:
             syntax_dict[symbol.markdown_syntax] = symbol
             
         return syntax_dict
         
-    def _build_symbol_name_dict() -> dict[str, str]:
+    def _build_symbol_name_dict(self) -> dict[str, str]:
         symbol_name_dict = {}
         for symbol in self._symbols:
             syntax_dict[symbol.symbol_name] = symbol
             
         return symbol_name_dict
 
-    def _build_syntax_trie(symbols: dict[str,str]) -> dict[dict]:
+    def _build_syntax_trie(self) -> dict[dict]:
         root = dict()
         for symbol in self._symbols:
             current_dict = root
@@ -55,8 +55,8 @@ class MarkdownSymbolHelper:
 
         return root
 
-    def symbol_trie_lookup(value: str, trie: dict[dict]) -> TrieState:
-        current_dict = trie
+    def symbol_trie_lookup(self, value: str) -> TrieState:
+        current_dict = self._syntax_trie
         for char in value:
             if char in current_dict:
                 current_dict = current_dict[char]
@@ -67,6 +67,12 @@ class MarkdownSymbolHelper:
             return TrieState.EXISTS_COMPLETE
         else:
             return TrieState.EXISTS_PARTIAL
+        
+    def symbol_exists(self, symbol: str) -> bool:
+        return symbol in self._syntax_dict
+    
+    def get_symbol(self, symbol: str) -> MarkdownSymbol:
+        return _syntax_dict[symbol]
 
 
 _markdown_symbols = [
