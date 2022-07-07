@@ -29,3 +29,53 @@ def test_markdown_tokenizer_handles_h1(markdown_tokenizer, tmp_path):
     
     with open(temp_file_path, mode="r") as f:
         assert markdown_tokenizer.tokenize_markdown(f) == expected_result
+
+
+def test_markdown_tokenizer_handles_h2(markdown_tokenizer, tmp_path):
+    test_markdown = "## Test H2"
+    temp_file_path = write_data_to_temp_file(test_markdown, tmp_path)
+        
+    expected_result = ["##", " Test H2"]
+    
+    with open(temp_file_path, mode="r") as f:
+        assert markdown_tokenizer.tokenize_markdown(f) == expected_result
+
+
+def test_markdown_tokenizer_handles_h3(markdown_tokenizer, tmp_path):
+    test_markdown = "### Test H3"
+    temp_file_path = write_data_to_temp_file(test_markdown, tmp_path)
+        
+    expected_result = ["###", " Test H3"]
+    
+    with open(temp_file_path, mode="r") as f:
+        assert markdown_tokenizer.tokenize_markdown(f) == expected_result
+
+
+def test_markdown_tokenizer_handles_h4(markdown_tokenizer, tmp_path):
+    test_markdown = "#### Test H4"
+    temp_file_path = write_data_to_temp_file(test_markdown, tmp_path)
+        
+    expected_result = ["####", " Test H4"]
+    
+    with open(temp_file_path, mode="r") as f:
+        assert markdown_tokenizer.tokenize_markdown(f) == expected_result
+
+
+def test_markdown_tokenizer_handles_h5(markdown_tokenizer, tmp_path):
+    test_markdown = "##### Test H5"
+    temp_file_path = write_data_to_temp_file(test_markdown, tmp_path)
+        
+    expected_result = ["#####", " Test H5"]
+    
+    with open(temp_file_path, mode="r") as f:
+        assert markdown_tokenizer.tokenize_markdown(f) == expected_result
+
+
+def test_markdown_tokenizer_handles_h6(markdown_tokenizer, tmp_path):
+    test_markdown = "###### Test H6"
+    temp_file_path = write_data_to_temp_file(test_markdown, tmp_path)
+        
+    expected_result = ["######", " Test H6"]
+    
+    with open(temp_file_path, mode="r") as f:
+        assert markdown_tokenizer.tokenize_markdown(f) == expected_result
