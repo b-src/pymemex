@@ -24,7 +24,7 @@ class MarkdownSymbol:
 
 
 class MarkdownSymbolHelper:
-    def __init__(markdown_symbol_list: list[MarkdownSymbol]) -> None:
+    def __init__(self, markdown_symbol_list: list[MarkdownSymbol]) -> None:
         self._symbols = markdown_symbol_list
         self._syntax_dict = self._build_syntax_dict()
         self._symbol_name_dict = self._build_symbol_name_dict()
@@ -40,7 +40,7 @@ class MarkdownSymbolHelper:
     def _build_symbol_name_dict(self) -> dict[str, str]:
         symbol_name_dict = {}
         for symbol in self._symbols:
-            syntax_dict[symbol.symbol_name] = symbol
+            symbol_name_dict[symbol.name] = symbol
             
         return symbol_name_dict
 
@@ -72,18 +72,19 @@ class MarkdownSymbolHelper:
         return symbol in self._syntax_dict
     
     def get_symbol(self, symbol: str) -> MarkdownSymbol:
-        return _syntax_dict[symbol]
+        return self._syntax_dict[symbol]
 
 
 _markdown_symbols = [
-    MarkdownSymbol(symbol_name="h1", markdown_syntax="#", opening_tag="<h1>", closing_tag="</h1>", closing_symbol_name=None),
-    MarkdownSymbol(symbol_name="h2", markdown_syntax="##", opening_tag="<h2>", closing_tag="</h2>", closing_symbol_name=None),
-    MarkdownSymbol(symbol_name="h3", markdown_syntax="###", opening_tag="<h3>", closing_tag="</h3>", closing_symbol_name=None),
-    MarkdownSymbol(symbol_name="h4", markdown_syntax="####", opening_tag="<h4>", closing_tag="</h4>", closing_symbol_name=None),
-    MarkdownSymbol(symbol_name="h5", markdown_syntax="#####", opening_tag="<h5>", closing_tag="</h5>", closing_symbol_name=None),
-    MarkdownSymbol(symbol_name="h6", markdown_syntax="#######", opening_tag="<h6>", closing_tag="</h6>", closing_symbol_name=None),
+    MarkdownSymbol(symbol_name="h1", markdown_syntax="#", opening_tag="<h1>", closing_tag="</h1>", closing_symbol_name="single-linebreak"),
+    MarkdownSymbol(symbol_name="h2", markdown_syntax="##", opening_tag="<h2>", closing_tag="</h2>", closing_symbol_name="single-linebreak"),
+    MarkdownSymbol(symbol_name="h3", markdown_syntax="###", opening_tag="<h3>", closing_tag="</h3>", closing_symbol_name="single-linebreak"),
+    MarkdownSymbol(symbol_name="h4", markdown_syntax="####", opening_tag="<h4>", closing_tag="</h4>", closing_symbol_name="single-linebreak"),
+    MarkdownSymbol(symbol_name="h5", markdown_syntax="#####", opening_tag="<h5>", closing_tag="</h5>", closing_symbol_name="single-linebreak"),
+    MarkdownSymbol(symbol_name="h6", markdown_syntax="######", opening_tag="<h6>", closing_tag="</h6>", closing_symbol_name="single-linebreak"),
+    MarkdownSymbol(symbol_name="single-linebreak", markdown_syntax="\n", opening_tag=None, closing_tag=None, closing_symbol_name=None),
     MarkdownSymbol(symbol_name="paragraph-separator", markdown_syntax="\n\n", opening_tag=None, closing_tag=None, closing_symbol_name=None),
-    MarkdownSymbol(symbol_name="linebreak", markdown_syntax="\\\\\\", opening_tag="<br />", closing_tag=None, closing_symbol_name=None),
+    MarkdownSymbol(symbol_name="explicit-linebreak", markdown_syntax="\\\\\\", opening_tag="<br />", closing_tag=None, closing_symbol_name=None),
     MarkdownSymbol(symbol_name="bold", markdown_syntax="*", opening_tag="<b>", closing_tag="</b>", closing_symbol_name="bold"),
     MarkdownSymbol(symbol_name="italic", markdown_syntax="**", opening_tag="<i>", closing_tag="</i>", closing_symbol_name="italic"),
     MarkdownSymbol(symbol_name="bold-italic", markdown_syntax="***", opening_tag="<b><i>", closing_tag="</i></b>", closing_symbol_name="bold-italic"),
