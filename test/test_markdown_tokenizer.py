@@ -95,7 +95,7 @@ def test_markdown_tokenizer_handles_paragraph_separator(markdown_tokenizer, tmp_
     test_markdown = "\n\n\n\nthis is a paragraph\n\nsecond paragraph\n\n\n\n"
     temp_file_path = write_data_to_temp_file(test_markdown, tmp_path)
         
-    expected_result = ["\n\n", "this is a paragraph", "\n\n", "second paragraph", "\n\n", "\n\n"]
+    expected_result = ["\n\n", "\n\n", "this is a paragraph", "\n\n", "second paragraph", "\n\n", "\n\n"]
     
     with open(temp_file_path, mode="r") as f:
         assert markdown_tokenizer.tokenize_markdown(f) == expected_result
