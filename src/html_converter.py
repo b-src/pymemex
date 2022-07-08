@@ -52,7 +52,7 @@ class MarkdownTokenizer:
             else:
                 match self._state:
                     case TokenizerState.CONTENT:
-                        symbol_status = markdown_symbol_helper.symbol_trie_lookup(char, markdown_syntax_trie)
+                        symbol_status = markdown_symbol_helper.symbol_trie_lookup(char)
                         if symbol_status != TrieState.NOT_FOUND:
                             self._state = TokenizerState.PARSING_SYMBOL
                             self._previous_token_candiate_buffer = self._token_buffer
@@ -63,8 +63,8 @@ class MarkdownTokenizer:
 
                     case TokenizerState.PARSING_SYMBOL:
                         current_symbol = self._token_buffer + char
-                        current_symbol_state = markdown_symbol_helper.symbol_trie_lookup(current_symbol, markdown_syntax_trie)
-                        char_symbol_state = markdown_symbol_helper.symbol_trie_lookup(char, markdown_syntax_trie)
+                        current_symbol_state = markdown_symbol_helper.symbol_trie_lookup(current_symbol)
+                        char_symbol_state = markdown_symbol_helper.symbol_trie_lookup(char)
                         
                         if current_symbol_state == TrieState.NOT_FOUND:
                             if self._last_token_buffer_state == TrieState.EXISTS_PARTIAL:
@@ -89,11 +89,17 @@ class MarkdownTokenizer:
                                     self._state = TokenizerState.PARSING_SYMBOL
                         else:
                             self._token_buffer += char
+                            self._last_token_buffer_state = current_symbol_state
 
         # Add anything remaining to token list when EOF is hit
-        any_remaining_content = self._previous_token_candiate_buffer + self._token_buffer
-        if any_remaining_content:
-            token_list.append(any_remaining_content)
+        if self._last_token_buffer_state == TrieState.EXISTS_COMPLETE:
+            if self._previous_token_candiate_buffer:
+                token_list.append(self._previous_token_candiate_buffer)
+            token_list.append(self._token_buffer)
+        else:
+            any_remaining_content = self._previous_token_candiate_buffer + self._token_buffer
+            if any_remaining_content:
+                token_list.append(any_remaining_content)
                             
         return token_list
 
@@ -103,7 +109,7 @@ class TokenToHTMLConverter:
         pass
     
     def _check_syntax_is_proper(self, token_list: list[str]) -> bool:
-        return _check_symbols_that_need_to_be_are_closed_properly(token_list)
+        return self._check_symbols_that_need_to_be_are_closed_properly(token_list)
 
     def _check_symbols_that_need_to_be_are_closed_properly(self, token_list: list[str]) -> None:
         expected_closing_symbols = deque()
@@ -126,6 +132,7 @@ class TokenToHTMLConverter:
 
     # TODO: account for multiple tags closed at once
     # TODO: account for paragraphs
+    # TODO: replace f strings in logging (they're evaluated whether or not logs are to that level)
     def convert_token_list_to_html(self, token_list: list[str]) -> str:
         self._check_syntax_is_proper(token_list)
 
@@ -134,23 +141,31 @@ class TokenToHTMLConverter:
         closing_tag_stack = deque()
         paragraph_needed_for_next_content = False
 
+        memex_logger.debug(f"token list: {token_list}")
+
         for token in token_list:
             if markdown_symbol_helper.symbol_exists(token):
                 symbol = markdown_symbol_helper.get_symbol(token)
 
                 if expected_closing_symbols:
                     if symbol.name == expected_closing_symbols[-1]:
+                        memex_logger.debug(f"popping {expected_closing_symbols[-1]} from expected_closing_symbols")
                         expected_closing_symbols.pop()
+                        if closing_tag_stack:
+                            memex_logger.debug(f"popping {closing_tag_stack[-1]} from expected_closing_symbols")
                         page_content += closing_tag_stack.pop()
                     else:
                         if symbol.has_closing_symbol():
+                            memex_logger.debug(f"appending {symbol.closing_symbol_name} to expected_closing_symbols")
                             expected_closing_symbols.append(symbol.closing_symbol_name)
-                            if markdown_symbol.closing_tag is not None:
-                                closing_tag_stack.append(markdown_symbol.closing_tag)
+                            if symbol.closing_tag is not None:
+                                memex_logger.debug(f"appending {symbol.closing_tag} to closing_tag_stack")
+                                closing_tag_stack.append(symbol.closing_tag)
                 else:
-                    if markdown_symbol.opening_tag is not None:
-                        page_content += token_open_tag
+                    if symbol.opening_tag is not None:
+                        page_content += symbol.opening_tag
                     if symbol.has_closing_symbol():
+                        memex_logger.debug(f"appending {symbol.closing_symbol_name} to expected_closing_symbols")
                         expected_closing_symbols.append(symbol.closing_symbol_name)
         
         return page_content
