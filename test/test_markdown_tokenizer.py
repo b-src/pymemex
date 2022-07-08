@@ -135,7 +135,7 @@ def test_markdown_tokenizer_handles_bold_italic(markdown_tokenizer, tmp_path):
     test_markdown = "this is ***bold-italic*** text"
     temp_file_path = write_data_to_temp_file(test_markdown, tmp_path)
         
-    expected_result = ["this is ", "**", "bold-italic", "**", " text"]
+    expected_result = ["this is ", "***", "bold-italic", "***", " text"]
     
     with open(temp_file_path, mode="r") as f:
         assert markdown_tokenizer.tokenize_markdown(f) == expected_result
